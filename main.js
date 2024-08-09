@@ -1,4 +1,5 @@
 const value_input = document.getElementById("value-input");
+const section_status = document.getElementById("section-status");
 const cash_register = document.getElementById("cash_register");
 const purchase_btn = document.getElementById("purchase-btn");
 const top_display_screen = document.getElementById("top-display-screen");
@@ -42,8 +43,24 @@ for (let i = 0; i < newArrCid.length; i++){
     i++;
 };
 
+purchase_btn.addEventListener("click", () => {
+    if (value_input.value < price){
+       alert("Customer does not have enough money to purchase the item");
+    }else{
+        section_status.textContent = "";
 
+        section_status.innerHTML += `<p>Status: OPEN</p>`;
+    }
+    value_input.value = '';
+});
 
-// purchase_btn.addEventListener("click", () => {
+const section_status_result = (value) => {
+    for (let i = 0; i < newArrCid.length; i++){
+        if (value < newArrCid[i+1]){
 
-// });
+        }
+        
+        (cash_register.innerHTML += `
+            <li>${newArrCid[i]}: $${newArrCid[i+1]}</li>`)
+    }
+};
