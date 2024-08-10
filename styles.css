@@ -2,12 +2,4 @@
     background-color: rgb(54, 38, 38);
     color: aliceblue;
 }
-/* this hidden is temporary, use js to create a new ul with all elements in */
-.hidden{
-    display: none;
-}
-
-.cash_register {
-    list-style-type: none;
-}
 

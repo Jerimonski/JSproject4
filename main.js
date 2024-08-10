@@ -1,10 +1,4 @@
-const value_input = document.getElementById("value-input");
-const section_status = document.getElementById("section-status");
-const cash_register = document.getElementById("cash_register");
-const purchase_btn = document.getElementById("purchase-btn");
-const top_display_screen = document.getElementById("top-display-screen");
-
-let price = 1.87;
+let price = 3.26;
 let cid = [
   ['PENNY', 1.01],
   ['NICKEL', 2.05],
@@ -17,50 +11,117 @@ let cid = [
   ['ONE HUNDRED', 100]
 ];
 
-let denominations = [100, 20, 10, 5, 1, 0.25, 0.1, 0.05, 0.01];
+const displayChangeDue = document.getElementById('change-due');
+const cash = document.getElementById('cash');
+const purchaseBtn = document.getElementById('purchase-btn');
+const priceScreen = document.getElementById('price-screen');
+const cashDrawerDisplay = document.getElementById('cash-drawer-display');
 
-// access to the value in a one array
-const newArrCid = cid.flat();
-
-//Top display screen
-const total = document.createElement("p");
-const textTotal = document.createTextNode(`Total: $${price}`);
-total.appendChild(textTotal);
-top_display_screen.appendChild(total);
-
-
-// Change in drawer 
-const change_in_drawer = document.createElement("p");
-const text_change_in_drawer = document.createTextNode("Change in drawer:");
-change_in_drawer.appendChild(text_change_in_drawer);
-cash_register.appendChild(change_in_drawer);
-
-// form change in 
-for (let i = 0; i < newArrCid.length; i++){
-    (cash_register.innerHTML += `
-        <li>${newArrCid[i]}: $${newArrCid[i+1]}</li>    
-    `)
-    i++;
+const formatResults = (status, change) => {
+  displayChangeDue.innerHTML = `<p>Status: ${status}</p>`;
+  change.map(
+    money => (displayChangeDue.innerHTML += `<p>${money[0]}: $${money[1]}</p>`)
+  );
+  return;
 };
 
-purchase_btn.addEventListener("click", () => {
-    if (value_input.value < price){
-       alert("Customer does not have enough money to purchase the item");
-    }else{
-        section_status.textContent = "";
+const checkCashRegister = () => {
+  if (Number(cash.value) < price) {
+    alert('Customer does not have enough money to purchase the item');
+    cash.value = '';
+    return;
+  }
 
-        section_status.innerHTML += `<p>Status: OPEN</p>`;
+  if (Number(cash.value) === price) {
+    displayChangeDue.innerHTML =
+      '<p>No change due - customer paid with exact cash</p>';
+    cash.value = '';
+    return;
+  }
+
+  let changeDue = Number(cash.value) - price;
+  let reversedCid = [...cid].reverse();
+  let denominations = [100, 20, 10, 5, 1, 0.25, 0.1, 0.05, 0.01];
+  let result = { status: 'OPEN', change: [] };
+  let totalCID = parseFloat(
+    cid
+      .map(total => total[1])
+      .reduce((prev, curr) => prev + curr)
+      .toFixed(2)
+  );
+
+  if (totalCID < changeDue) {
+    return (displayChangeDue.innerHTML = '<p>Status: INSUFFICIENT_FUNDS</p>');
+  }
+
+  if (totalCID === changeDue) {
+    result.status = 'CLOSED';
+  }
+
+  for (let i = 0; i <= reversedCid.length; i++) {
+    if (changeDue >= denominations[i] && changeDue > 0) {
+      let count = 0;
+      let total = reversedCid[i][1];
+      while (total > 0 && changeDue >= denominations[i]) {
+        total -= denominations[i];
+        changeDue = parseFloat((changeDue -= denominations[i]).toFixed(2));
+        count++;
+      }
+      if (count > 0) {
+        result.change.push([reversedCid[i][0], count * denominations[i]]);
+      }
     }
-    value_input.value = '';
+  }
+  if (changeDue > 0) {
+    return (displayChangeDue.innerHTML = '<p>Status: INSUFFICIENT_FUNDS</p>');
+  }
+
+  formatResults(result.status, result.change);
+  updateUI(result.change);
+};
+
+const checkResults = () => {
+  if (!cash.value) {
+    return;
+  }
+  checkCashRegister();
+};
+
+const updateUI = change => {
+  const currencyNameMap = {
+    PENNY: 'Pennies',
+    NICKEL: 'Nickels',
+    DIME: 'Dimes',
+    QUARTER: 'Quarters',
+    ONE: 'Ones',
+    FIVE: 'Fives',
+    TEN: 'Tens',
+    TWENTY: 'Twenties',
+    'ONE HUNDRED': 'Hundreds'
+  };
+  // Update cid if change is passed in
+  if (change) {
+    change.forEach(changeArr => {
+      const targetArr = cid.find(cidArr => cidArr[0] === changeArr[0]);
+      targetArr[1] = parseFloat((targetArr[1] - changeArr[1]).toFixed(2));
+    });
+  }
+
+  cash.value = '';
+  priceScreen.textContent = `Total: $${price}`;
+  cashDrawerDisplay.innerHTML = `<p><strong>Change in drawer:</strong></p>
+    ${cid
+      .map(money => `<p>${currencyNameMap[money[0]]}: $${money[1]}</p>`)
+      .join('')}  
+  `;
+};
+
+purchaseBtn.addEventListener('click', checkResults);
+
+cash.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    checkResults();
+  }
 });
 
-const section_status_result = (value) => {
-    for (let i = 0; i < newArrCid.length; i++){
-        if (value < newArrCid[i+1]){
-
-        }
-        
-        (cash_register.innerHTML += `
-            <li>${newArrCid[i]}: $${newArrCid[i+1]}</li>`)
-    }
-};
+updateUI();
